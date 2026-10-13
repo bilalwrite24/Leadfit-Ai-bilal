@@ -21,6 +21,7 @@ import {
   initialMeetings,
   initialAgents,
   initialIntegrations,
+  curatedSampleLeads,
 } from '../data/mockData';
 
 interface Toast {
@@ -52,6 +53,8 @@ interface AppContextType {
   updateProspect: (id: string, updates: Partial<Prospect>) => void;
   deleteProspect: (id: string) => void;
   importProspects: (imported: Partial<Prospect>[]) => void;
+  clearAllProspects: () => void;
+  resetToSampleProspects: () => void;
   
   buyingSignals: BuyingSignal[];
   updateSignalStatus: (id: string, status: BuyingSignal['status']) => void;
@@ -106,7 +109,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [workspace] = useState<Workspace>(initialWorkspace);
-  const [currentPage, setCurrentPage] = useState<NavigationTarget>('dashboard');
+  const [currentPage, setCurrentPage] = useState<NavigationTarget>('lead-finder');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -117,7 +120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 90) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       } catch {
@@ -307,6 +310,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast(`Imported ${fullyTyped.length} prospects from CSV`, 'success');
   };
 
+  const clearAllProspects = () => {
+    setProspects([]);
+    localStorage.setItem('leadfit_prospects', JSON.stringify([]));
+    showToast('All leads cleared. Workspace is ready for real leads.', 'info');
+  };
+
+  const resetToSampleProspects = () => {
+    setProspects(curatedSampleLeads);
+    localStorage.setItem('leadfit_prospects', JSON.stringify(curatedSampleLeads));
+    showToast('Curated verified sample leads restored', 'success');
+  };
+
   const updateSignalStatus = (id: string, status: BuyingSignal['status']) => {
     setBuyingSignals((prev) =>
       prev.map((s) => (s.id === id ? { ...s, status } : s))
@@ -434,6 +449,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateProspect,
         deleteProspect,
         importProspects,
+        clearAllProspects,
+        resetToSampleProspects,
         buyingSignals,
         updateSignalStatus,
         campaigns,

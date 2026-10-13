@@ -232,7 +232,18 @@ export const DeveloperPage: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 space-y-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10 space-y-10">
+      {/* Return to Lead Identifier Tool Top Bar */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setCurrentPage('lead-finder')}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-all shadow-2xs active:scale-95 cursor-pointer"
+        >
+          <span>← Back to Lead Identifier Tool</span>
+        </button>
+        <span className="text-xs text-slate-400 hidden sm:inline">LeadFit AI • Software Developer Profile</span>
+      </div>
+
       {/* Hidden File Input for Direct Local Image Selection */}
       <input
         type="file"

@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { exportProspectsToCSV, downloadCSV, parseCSVProspects } from '../../services/csvUtils';
 import { fetchLiveDiscoverLeads, fetchDraftOutreach } from '../../services/geminiService';
 import {
+  Target,
   Search,
   Filter,
   Download,
@@ -55,14 +56,16 @@ export const LeadFinderPage: React.FC = () => {
   const {
     prospects,
     addProspect,
+    updateProspect,
     importProspects,
     deleteProspect,
-    campaigns,
-    updateCampaign,
+    clearAllProspects,
+    resetToSampleProspects,
     showToast,
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   // View state: 'grid' or 'table'
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -107,10 +110,6 @@ export const LeadFinderPage: React.FC = () => {
   const [newLocation, setNewLocation] = useState('United States');
   const [newIndustry, setNewIndustry] = useState('B2B SaaS');
   const [newSignal, setNewSignal] = useState('');
-
-  // Add to Campaign Modal
-  const [batchCampaignModalOpen, setBatchCampaignModalOpen] = useState(false);
-  const [targetCampaignId, setTargetCampaignId] = useState(campaigns[0]?.id || '');
 
   // Saved Searches
   const [savedSearches, setSavedSearches] = useState<{ id: string; name: string; query: string; industry: string }[]>([
@@ -340,20 +339,6 @@ export const LeadFinderPage: React.FC = () => {
     setSelectedProspectIds([]);
   };
 
-  // Batch add to campaign
-  const handleBatchAddToCampaign = () => {
-    if (selectedProspectIds.length === 0 || !targetCampaignId) return;
-    const targetCamp = campaigns.find((c) => c.id === targetCampaignId);
-    if (targetCamp) {
-      updateCampaign(targetCamp.id, {
-        prospectCount: targetCamp.prospectCount + selectedProspectIds.length,
-      });
-      showToast(`Added ${selectedProspectIds.length} prospects to "${targetCamp.name}"`, 'success');
-      setSelectedProspectIds([]);
-      setBatchCampaignModalOpen(false);
-    }
-  };
-
   // Save current search filter
   const handleSaveSearch = () => {
     if (!searchQuery && selectedIndustry === 'all') {
@@ -438,16 +423,17 @@ export const LeadFinderPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-              Lead Finder & AI Discovery Radar
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Target className="w-5 h-5 text-indigo-600" />
+              <span>Lead Identifier Tool</span>
             </h1>
-            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-indigo-200 dark:border-indigo-800">
               <Zap className="w-3 h-3" />
-              <span>100 Results Loaded · Free Unlimited</span>
+              <span>Verified Decision Makers</span>
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Discover decision makers across 100+ verified accounts with direct LinkedIn profile links, verified emails, and explainable ICP scoring.
+            Identify, verify, and prospect targeted B2B decision makers with verified emails, direct LinkedIn profile links, and company intelligence.
           </p>
         </div>
 
@@ -462,7 +448,7 @@ export const LeadFinderPage: React.FC = () => {
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{showDiscoveryRadar ? 'AI Radar Active' : 'Show AI Radar'}</span>
+            <span>{showDiscoveryRadar ? 'Discovery Radar Active' : 'Open Lead Radar'}</span>
           </button>
 
           {/* Add Lead */}
@@ -471,7 +457,7 @@ export const LeadFinderPage: React.FC = () => {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors shadow-2xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Add Lead</span>
+            <span>+ Add Lead</span>
           </button>
 
           {/* Import CSV */}
@@ -497,6 +483,26 @@ export const LeadFinderPage: React.FC = () => {
           >
             <Download className="w-3.5 h-3.5 text-slate-400" />
             <span>Export CSV</span>
+          </button>
+
+          {/* Clear Workspace button */}
+          <button
+            onClick={() => setClearConfirmOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-slate-900 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shadow-2xs cursor-pointer"
+            title="Clear all demo/test leads to start with an empty pipeline"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear Leads</span>
+          </button>
+
+          {/* Load Sample Leads button */}
+          <button
+            onClick={resetToSampleProspects}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer"
+            title="Load curated sample verified leads"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Sample Leads</span>
           </button>
         </div>
       </div>
@@ -832,19 +838,11 @@ export const LeadFinderPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setBatchCampaignModalOpen(true)}
+              onClick={() => handleExportCSV(true)}
               className="px-3 py-1.5 rounded-lg bg-white text-indigo-700 font-semibold hover:bg-indigo-50 transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add to Campaign</span>
-            </button>
-
-            <button
-              onClick={() => handleExportCSV(true)}
-              className="px-3 py-1.5 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-medium transition-colors flex items-center gap-1 cursor-pointer"
-            >
               <Download className="w-3.5 h-3.5" />
-              <span>Export Selected</span>
+              <span>Export Selected CSV</span>
             </button>
 
             <button
@@ -980,16 +978,13 @@ export const LeadFinderPage: React.FC = () => {
                     Inspect Profile
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setSelectedProspectIds([p.id]);
-                      setBatchCampaignModalOpen(true);
-                    }}
+                  <a
+                    href={`mailto:${p.email}`}
                     className="py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Campaign</span>
-                  </button>
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Email</span>
+                  </a>
                 </div>
               </div>
             );
@@ -1101,15 +1096,13 @@ export const LeadFinderPage: React.FC = () => {
                           >
                             Inspect
                           </button>
-                          <button
-                            onClick={() => {
-                              setSelectedProspectIds([p.id]);
-                              setBatchCampaignModalOpen(true);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors cursor-pointer"
+                          <a
+                            href={`mailto:${p.email}`}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition-colors cursor-pointer flex items-center gap-1"
                           >
-                            Campaign
-                          </button>
+                            <Mail className="w-3 h-3" />
+                            <span>Email</span>
+                          </a>
                         </div>
                       </td>
                     </tr>
@@ -1420,16 +1413,36 @@ export const LeadFinderPage: React.FC = () => {
 
             {/* Bottom Actions inside Drawer */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setSelectedProspectIds([activeInspectorProspect.id]);
-                  setBatchCampaignModalOpen(true);
-                  setActiveInspectorProspect(null);
-                }}
+              <a
+                href={`mailto:${activeInspectorProspect.email}`}
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add to Campaign Sequence</span>
+                <Mail className="w-4 h-4" />
+                <span>Send Direct Email</span>
+              </a>
+
+              {activeInspectorProspect.linkedinUrl && (
+                <a
+                  href={activeInspectorProspect.linkedinUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Open LinkedIn Profile"
+                >
+                  <LinkedInIcon className="w-3.5 h-3.5 text-[#0A66C2]" />
+                  <span>LinkedIn</span>
+                </a>
+              )}
+
+              <button
+                onClick={() => {
+                  deleteProspect(activeInspectorProspect.id);
+                  setActiveInspectorProspect(null);
+                }}
+                className="px-3 py-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-semibold text-xs flex items-center justify-center cursor-pointer"
+                title="Delete Lead"
+              >
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -1566,46 +1579,44 @@ export const LeadFinderPage: React.FC = () => {
         </div>
       )}
 
-      {/* 9. BATCH ADD TO CAMPAIGN MODAL */}
-      {batchCampaignModalOpen && (
+      {/* 9. CLEAR WORKSPACE CONFIRMATION MODAL */}
+      {clearConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-              Add {selectedProspectIds.length} {selectedProspectIds.length === 1 ? 'Prospect' : 'Prospects'} to Campaign
-            </h3>
-            <p className="text-xs text-slate-500">
-              Select an outbound sequence to enroll these leads. Strict human-in-the-loop approval will be enforced before messages are dispatched.
-            </p>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Target Campaign
-              </label>
-              <select
-                value={targetCampaignId}
-                onChange={(e) => setTargetCampaignId(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white"
-              >
-                {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.status})
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Clear All Leads from Workspace?
+                </h3>
+                <span className="text-[11px] text-slate-500">
+                  Ready for your real prospecting data
+                </span>
+              </div>
             </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              This will remove all demo and current leads ({prospects.length} total) from your workspace so you can start with a 100% clean pipeline. You can add your own leads or run the Discovery Radar at any time.
+            </p>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
               <button
-                onClick={() => setBatchCampaignModalOpen(false)}
-                className="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                onClick={() => setClearConfirmOpen(false)}
+                className="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer font-medium"
               >
                 Cancel
               </button>
               <button
-                onClick={handleBatchAddToCampaign}
-                className="px-4 py-1.5 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer"
+                onClick={() => {
+                  clearAllProspects();
+                  setSelectedProspectIds([]);
+                  setClearConfirmOpen(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 transition-colors shadow-sm cursor-pointer"
               >
-                Confirm Add
+                Yes, Clear All Leads
               </button>
             </div>
           </div>

@@ -492,10 +492,12 @@ export const generate100Prospects = (): Prospect[] => {
     });
   }
 
-  return [...anchors, ...generated];
+  return anchors;
 };
 
-export const initialProspects: Prospect[] = generate100Prospects();
+export const curatedSampleLeads: Prospect[] = generate100Prospects();
+
+export const initialProspects: Prospect[] = curatedSampleLeads;
 
 export const initialCampaigns: Campaign[] = [
   {
