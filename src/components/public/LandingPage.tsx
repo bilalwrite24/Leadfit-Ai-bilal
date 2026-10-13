@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Zap,
 } from 'lucide-react';
+import heroBanner from '../../assets/images/hero_b2b_sales_platform_1791856741335.jpg';
 
 export const LandingPage: React.FC = () => {
   const { setCurrentPage, signIn } = useApp();
@@ -92,7 +93,7 @@ export const LandingPage: React.FC = () => {
         {/* Dashboard Preview Graphic */}
         <div className="mt-12 md:mt-16 relative rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800 shadow-2xl bg-slate-900">
           <img
-            src="/src/assets/images/hero_b2b_sales_platform_1791856741335.jpg"
+            src={heroBanner}
             alt="LeadFit AI Revenue Intelligence and Signal Radar Platform"
             className="w-full h-auto object-cover max-h-[640px]"
             referrerPolicy="no-referrer"

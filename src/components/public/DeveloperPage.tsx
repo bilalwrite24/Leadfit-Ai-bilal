@@ -30,6 +30,9 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 
+import bilalExactPhoto from '../../assets/images/bilal_exact_photo.jpg';
+import bilalStudioPhoto from '../../assets/images/bilal_iqbal_portrait_1791860238855.jpg';
+
 // Custom inline LinkedIn Icon
 const LinkedInIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg
@@ -57,13 +60,14 @@ export const DeveloperPage: React.FC = () => {
   const linkedinUrl = 'https://www.linkedin.com/in/bilal-iqbal-jutt/';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Exact photo handling with persistent storage
-  const defaultPhoto = '/src/assets/images/bilal_exact_photo.jpg';
-  const studioPhoto = '/src/assets/images/bilal_iqbal_portrait_1791860238855.jpg';
+  // Exact photo handling with bundled assets & persistent storage
+  const defaultPhoto = bilalExactPhoto;
+  const studioPhoto = bilalStudioPhoto;
 
   const [portraitUrl, setPortraitUrl] = useState<string>(() => {
     const saved = localStorage.getItem('leadfit_bilal_exact_photo');
-    if (saved) return saved;
+    // If old unbundled relative string was saved, upgrade to bundled defaultPhoto
+    if (saved && !saved.startsWith('/src/assets/')) return saved;
     return defaultPhoto;
   });
 
