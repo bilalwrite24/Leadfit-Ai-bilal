@@ -1,0 +1,6 @@
+{
+  "name": "LeadFit AI",
+  "description": "Premium B2B AI Sales Agent SaaS for discovering prospects, tracking buying signals, lead qualification, and personalized outreach.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
